@@ -30,6 +30,12 @@ export class WalletService {
   }
 
   async removeWallet(id: string) {
+    // remove wallet assets
+    const walletAssets = await this.prisma.asset.findMany({where : {walletId : +id}})
+    for (let wallet of walletAssets){
+      await this.prisma.asset.delete({where:{id : wallet.id}})
+    }
+    // remove wallet
     return await this.prisma.wallet.delete({ where: { id: +id } });
   }
 }

@@ -15,7 +15,7 @@ import {
 import { CreateAssetDto, UpdateAssetDto } from './dto';
 import { AssetService } from './asset.service';
 import {
-  getUserCryptoTransactions,
+  getUserCoinTransactions,
   getUserCryptoWalletAssetsList,
 } from 'clients/crypto';
 import { DataAccessGuard } from 'src/auth/guard';
@@ -88,7 +88,7 @@ export class AssetController {
         this.logger.log(
           `Getting user ${createAssetDto.username} transactions for crypto asset ${asset.name} with wallet ${createAssetDto.walletName} `,
         );
-        const userAssetTransactionsResponse = await getUserCryptoTransactions(
+        const userAssetTransactionsResponse = await getUserCoinTransactions(
           createAssetDto.username,
           createAssetDto.walletName,
           asset.name,

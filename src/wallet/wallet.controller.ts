@@ -17,6 +17,7 @@ import { CreateWalletDto, UpdateWalletDto } from './dto';
 import { DataAccessGuard } from 'src/auth/guard';
 import { CustomRequest } from 'src/auth/interface/request.interface';
 import { CustomLogger } from 'src/myLogger';
+import { deleteTransaction, getUserWalletTransactions } from 'clients/crypto';
 
 @Controller('api/wallets')
 export class WalletController {
@@ -77,12 +78,28 @@ export class WalletController {
   }
 
   @Delete('/:id')
-  async deleteWallet(@Param('id') id: string) {
+  async deleteWallet(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
-      const wallet = await this.walletService.removeWallet(id);
+      let wallet = await this.walletService.getWallet(id);
       if (!wallet) {
         throw new Error('Wallet not found');
+
       }
+      // remove wallet transaction from crypto/stock/forex
+      const walletType = wallet.type;
+      if (walletType === 'CRYPTO') {
+        const userWalletTransactionsResponse = await getUserWalletTransactions(
+          req.user.email,
+          wallet.name,
+        );
+        const userWalletTransactions = userWalletTransactionsResponse.data;
+        for (let transaction of userWalletTransactions) {
+          deleteTransaction(transaction.id);
+        }
+      }
+
+      // remove wallet
+      wallet = await this.walletService.removeWallet(id);
       return wallet;
     } catch (error) {
       this.logger.error(`Failed to retrieve wallet: ${error.message}`);
