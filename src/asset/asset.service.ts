@@ -1,16 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAssetDto, UpdateAssetDto } from './dto';
+import { CustomLogger } from 'src/myLogger';
 
 @Injectable()
 export class AssetService {
   constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new CustomLogger(AssetService.name);
 
   async getAssets() {
     return await this.prisma.asset.findMany();
   }
 
-  async getAssetsWithParams(query: Object) {
+  async getAssetsWithParams(query: any) {
+    // handle query data by days
+    if (query.days) {
+      const now = new Date();
+      now.setDate(now.getDate() - query.days);
+      query.createdAt = {
+        gte: now.toISOString(), // Greater than or equal to query.days  ago
+        lte: new Date().toISOString(), // Less than or equal to today
+      };
+      delete query.days;
+    }
     return await this.prisma.asset.findMany({ where: query });
   }
 

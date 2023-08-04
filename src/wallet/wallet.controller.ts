@@ -83,7 +83,6 @@ export class WalletController {
       let wallet = await this.walletService.getWallet(id);
       if (!wallet) {
         throw new Error('Wallet not found');
-
       }
       // remove wallet transaction from crypto/stock/forex
       const walletType = wallet.type;
@@ -96,6 +95,11 @@ export class WalletController {
         for (let transaction of userWalletTransactions) {
           deleteTransaction(transaction.id);
         }
+      }
+      // TODO
+      if (walletType === 'STOCK') {
+      }
+      if (walletType === 'FOREX') {
       }
 
       // remove wallet
