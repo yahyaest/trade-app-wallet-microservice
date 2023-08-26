@@ -16,10 +16,11 @@ model Wallet {
   updatedAt    DateTime   @updatedAt
   name         String
   username     String
-  intialValue   String
+  intialValue  String
   currentValue String
   type         WalletType
   assets       Asset[]
+  histories    History[]
 
   @@unique([name, username])
 }
@@ -29,7 +30,7 @@ model Asset {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   username     String
-  walletName  String
+  walletName   String
   wallet       Wallet?   @relation(fields: [walletId], references: [id])
   walletId     Int?
   type         AssetType
@@ -42,6 +43,21 @@ model Asset {
   soldAmount   Int
 
   @@unique([username, walletName, name])
+}
+
+model History {
+  id                 Int      @id @default(autoincrement())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  username           String
+  walletName         String
+  wallet             Wallet?  @relation(fields: [walletId], references: [id])
+  walletId           Int?
+  intialValue        Float
+  currentValue       Float
+  nonSoldAssetsValue Float
+  margin             Float
+  marginAmount       Float
 }
 
 enum WalletType {

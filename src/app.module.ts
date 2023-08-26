@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { WalletModule } from './wallet/wallet.module';
 import { AssetModule } from './asset/asset.module';
 import { LoggerModule } from 'nestjs-pino';
+import { HistoryModule } from './history/history.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { LoggerModule } from 'nestjs-pino';
     AuthModule,
     WalletModule,
     AssetModule,
+    HistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
