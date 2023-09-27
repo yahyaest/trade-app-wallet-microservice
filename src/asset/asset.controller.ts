@@ -43,17 +43,21 @@ export class AssetController {
   }
 
   @Get('/:id')
-  async getAsset(@Param('id') id: string) {
+  @UseGuards(DataAccessGuard)
+  async getAsset(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
+      const user = req.user;
       const asset = await this.assetService.getAsset(id);
       if (!asset) {
         throw new Error('Asset not found');
       }
-
+      if (user.email !== asset.username && user.role !== 'ADMIN') {
+        throw new Error('Asset belong to another user');
+      }
       return asset;
     } catch (error) {
       this.logger.error(`Failed to retrieve asset: ${error.message}`);
-      throw new HttpException('Asset not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -170,30 +174,45 @@ export class AssetController {
   }
 
   @Patch('/:id')
+  @UseGuards(DataAccessGuard)
   async updateAsset(
     @Param('id') id: string,
     @Body() updateAssetDto: UpdateAssetDto,
+    @Req() req: CustomRequest,
   ) {
     try {
+      const user = req.user;
+      const asset = await this.assetService.getAsset(id);
+      if (!asset) {
+        throw new Error('Asset not found');
+      }
+      if (user.email !== asset.username && user.role !== 'ADMIN') {
+        throw new Error('Asset belong to another user');
+      }
       return await this.assetService.updateAsset(id, updateAssetDto);
     } catch (error) {
       this.logger.error(error);
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Delete('/:id')
-  async deleteAsset(@Param('id') id: string) {
+  @UseGuards(DataAccessGuard)
+  async deleteAsset(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
-      const asset = await this.assetService.removeAsset(id);
+      const user = req.user;
+      const asset = await this.assetService.getAsset(id);
       if (!asset) {
         throw new Error('Asset not found');
       }
+      if (user.email !== asset.username && user.role !== 'ADMIN') {
+        throw new Error('Asset belong to another user');
+      }
+      await this.assetService.removeAsset(id);
       return asset;
     } catch (error) {
       this.logger.error(`Failed to retrieve asset: ${error.message}`);
-      throw new HttpException('Asset not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
-  
 }

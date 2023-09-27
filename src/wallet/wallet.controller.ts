@@ -40,17 +40,21 @@ export class WalletController {
   }
 
   @Get('/:id')
-  async getWallet(@Param('id') id: string) {
+  @UseGuards(DataAccessGuard)
+  async getWallet(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
+      const user = req.user;
       const wallet = await this.walletService.getWallet(id);
       if (!wallet) {
         throw new Error('Wallet not found');
       }
-
+      if (user.email !== wallet.username && user.role !== 'ADMIN') {
+        throw new Error('Wallet belong to another user');
+      }
       return wallet;
     } catch (error) {
       this.logger.error(`Failed to retrieve wallet: ${error.message}`);
-      throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -65,24 +69,39 @@ export class WalletController {
   }
 
   @Patch('/:id')
+  @UseGuards(DataAccessGuard)
   async updateWallet(
     @Param('id') id: string,
     @Body() updateWalletDto: UpdateWalletDto,
+    @Req() req: CustomRequest,
   ) {
     try {
+      const user = req.user;
+      const wallet = await this.walletService.getWallet(id);
+      if (!wallet) {
+        throw new Error('Wallet not found');
+      }
+      if (user.email !== wallet.username && user.role !== 'ADMIN') {
+        throw new Error('Wallet belong to another user');
+      }
       return await this.walletService.updateWallet(id, updateWalletDto);
     } catch (error) {
       this.logger.error(error);
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Delete('/:id')
+  @UseGuards(DataAccessGuard)
   async deleteWallet(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
+      const user = req.user;
       let wallet = await this.walletService.getWallet(id);
       if (!wallet) {
         throw new Error('Wallet not found');
+      }
+      if (user.email !== wallet.username && user.role !== 'ADMIN') {
+        throw new Error('Wallet belong to another user');
       }
       // remove wallet transaction from crypto/stock/forex
       const walletType = wallet.type;
@@ -107,7 +126,7 @@ export class WalletController {
       return wallet;
     } catch (error) {
       this.logger.error(`Failed to retrieve wallet: ${error.message}`);
-      throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 }
