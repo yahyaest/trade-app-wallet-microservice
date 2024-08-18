@@ -14,18 +14,16 @@ import {
 } from '@nestjs/common';
 import { CreateAssetDto, UpdateAssetDto } from './dto';
 import { AssetService } from './asset.service';
-import {
-  getUserCoinTransactions,
-  getUserCryptoWalletAssetsList,
-} from 'clients/crypto';
 import { DataAccessGuard } from 'src/auth/guard';
 import { CustomRequest } from 'src/auth/interface/request.interface';
 import { CustomLogger } from 'src/myLogger';
+import CryptoClient from 'clients/crypto';
 
 @Controller('api/assets')
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
   private readonly logger = new CustomLogger(AssetController.name);
+  private cryptoClient = new CryptoClient();
 
   @Get('')
   @UseGuards(DataAccessGuard)
@@ -71,7 +69,7 @@ export class AssetController {
           `get crypto Assets for user ${createAssetDto.username} with wallet ${createAssetDto.walletName}`,
         );
         const userWalletAssetsListResponse =
-          await getUserCryptoWalletAssetsList(
+          await this.cryptoClient.getUserCryptoWalletAssetsList(
             createAssetDto.username,
             createAssetDto.walletName,
           );
@@ -92,11 +90,12 @@ export class AssetController {
         this.logger.log(
           `Getting user ${createAssetDto.username} transactions for crypto asset ${asset.name} with wallet ${createAssetDto.walletName} `,
         );
-        const userAssetTransactionsResponse = await getUserCoinTransactions(
-          createAssetDto.username,
-          createAssetDto.walletName,
-          asset.name,
-        );
+        const userAssetTransactionsResponse =
+          await this.cryptoClient.getUserCoinTransactions(
+            createAssetDto.username,
+            createAssetDto.walletName,
+            asset.name,
+          );
         const userAssetTransactions = userAssetTransactionsResponse.data;
 
         const boughtAssetTransactions = userAssetTransactions.filter(

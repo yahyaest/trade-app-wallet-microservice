@@ -2,113 +2,111 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CustomLogger } from 'src/myLogger';
 
-const logger = new CustomLogger('Crypto Connector');
+class CryptoClient {
+  private baseUrl: string;
+  private config: ConfigService;
+  private logger;
 
-export const getUserCryptoWalletAssetsList = async (
-  email: string,
-  wallet: string,
-) => {
-  // login
-  const config = new ConfigService();
-  const gatewayBaseUrl = config.get('GATEWAY_BASE_URL');
-  const signInUrl = `${gatewayBaseUrl}/api/auth/signin`;
-  const login = await axios.post(signInUrl, {
-    email: config.get('WALLET_USERNAME'),
-    password: config.get('WALLET_PASSWORD'),
-  });
-  const token = login.data.access_token;
+  constructor() {
+    this.config = new ConfigService();
+    this.baseUrl = this.config.get('BASE_URL');
+    this.logger = new CustomLogger('Crypto Connector');
+  }
 
-  // get user crypto wallet assets
-  const cryptoBaseUrl = config.get('CRYPTO_BASE_URL');
-  const getUserWalletAssetsUrl = `${cryptoBaseUrl}/api/transactions/user_assets`;
-  logger.log(
-    `Getting crypto assets list for user with email ${email} and wallet ${wallet}`,
-  );
+  async getUserCryptoWalletAssetsList(email: string, wallet: string) {
+    // login
+    const signInUrl = `${this.baseUrl}/api/auth/signin`;
+    const login = await axios.post(signInUrl, {
+      email: this.config.get('WALLET_USERNAME'),
+      password: this.config.get('WALLET_PASSWORD'),
+    });
+    const token = login.data.access_token;
 
-  const options = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  return await axios.post(getUserWalletAssetsUrl, { email, wallet, type: "CRYPTO" }, options);
-};
+    // get user crypto wallet assets
+    const getUserWalletAssetsUrl = `${this.baseUrl}/trade-crypto/api/transactions/user_assets`;
+    this.logger.log(
+      `Getting crypto assets list for user with email ${email} and wallet ${wallet}`,
+    );
 
-export const getUserCoinTransactions = async (
-  username: string,
-  wallet: string,
-  name: string,
-) => {
-  // login
-  const config = new ConfigService();
-  const gatewayBaseUrl = config.get('GATEWAY_BASE_URL');
-  const signInUrl = `${gatewayBaseUrl}/api/auth/signin`;
-  const login = await axios.post(signInUrl, {
-    email: config.get('WALLET_USERNAME'),
-    password: config.get('WALLET_PASSWORD'),
-  });
-  const token = login.data.access_token;
+    const options = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    return await axios.post(
+      getUserWalletAssetsUrl,
+      { email, wallet, type: 'CRYPTO' },
+      options,
+    );
+  }
 
-  // get user transactions
-  const cryptoBaseUrl = config.get('CRYPTO_BASE_URL');
-  const getUserTransactionsUrl = `${cryptoBaseUrl}/api/transactions/?username=${username}&wallet=${wallet}&name=${name}&type=CRYPTO`;
-  logger.log(
-    `Getting crypto Transactions list for user with email ${username} and wallet ${wallet} and coin ${name}`,
-  );
-  const options = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  return await axios.get(getUserTransactionsUrl, options);
-};
+  async getUserCoinTransactions(
+    username: string,
+    wallet: string,
+    name: string,
+  ) {
+    // login
+    const signInUrl = `${this.baseUrl}/api/auth/signin`;
+    const login = await axios.post(signInUrl, {
+      email: this.config.get('WALLET_USERNAME'),
+      password: this.config.get('WALLET_PASSWORD'),
+    });
+    const token = login.data.access_token;
 
-export const getUserWalletTransactions = async (
-  username: string,
-  wallet: string,
-) => {
-  // login
-  const config = new ConfigService();
-  const gatewayBaseUrl = config.get('GATEWAY_BASE_URL');
-  const signInUrl = `${gatewayBaseUrl}/api/auth/signin`;
-  const login = await axios.post(signInUrl, {
-    email: config.get('WALLET_USERNAME'),
-    password: config.get('WALLET_PASSWORD'),
-  });
-  const token = login.data.access_token;
+    // get user transactions
+    const getUserTransactionsUrl = `${this.baseUrl}/trade-crypto/api/transactions/?username=${username}&wallet=${wallet}&name=${name}&type=CRYPTO`;
+    this.logger.log(
+      `Getting crypto Transactions list for user with email ${username} and wallet ${wallet} and coin ${name}`,
+    );
+    const options = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    return await axios.get(getUserTransactionsUrl, options);
+  }
 
-  // get user transactions
-  const cryptoBaseUrl = config.get('CRYPTO_BASE_URL');
-  const getUserTransactionsUrl = `${cryptoBaseUrl}/api/transactions/?username=${username}&wallet=${wallet}&type=CRYPTO`;
-  logger.log(
-    `Getting crypto Transactions list for user with email ${username} and wallet ${wallet}`,
-  );
-  const options = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  return await axios.get(getUserTransactionsUrl, options);
-};
+  async getUserWalletTransactions(username: string, wallet: string) {
+    // login
+    const signInUrl = `${this.baseUrl}/api/auth/signin`;
+    const login = await axios.post(signInUrl, {
+      email: this.config.get('WALLET_USERNAME'),
+      password: this.config.get('WALLET_PASSWORD'),
+    });
+    const token = login.data.access_token;
 
-export const deleteTransaction = async (id: string) => {
-  // login
-  const config = new ConfigService();
-  const gatewayBaseUrl = config.get('GATEWAY_BASE_URL');
-  const signInUrl = `${gatewayBaseUrl}/api/auth/signin`;
-  const login = await axios.post(signInUrl, {
-    email: config.get('WALLET_USERNAME'),
-    password: config.get('WALLET_PASSWORD'),
-  });
-  const token = login.data.access_token;
+    // get user transactions
+    const getUserTransactionsUrl = `${this.baseUrl}/trade-crypto/api/transactions/?username=${username}&wallet=${wallet}&type=CRYPTO`;
+    this.logger.log(
+      `Getting crypto Transactions list for user with email ${username} and wallet ${wallet}`,
+    );
+    const options = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    return await axios.get(getUserTransactionsUrl, options);
+  }
 
-  // delet transaction
-  const cryptoBaseUrl = config.get('CRYPTO_BASE_URL');
-  const deleteTRansactionUrl = `${cryptoBaseUrl}/api/transactions/${id}`;
-  logger.log(`Deleting Transaction with id ${id}`);
-  const options = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  return await axios.delete(deleteTRansactionUrl, options);
-};
+  async deleteTransaction(id: string) {
+    // login
+    const signInUrl = `${this.baseUrl}/api/auth/signin`;
+    const login = await axios.post(signInUrl, {
+      email: this.config.get('WALLET_USERNAME'),
+      password: this.config.get('WALLET_PASSWORD'),
+    });
+    const token = login.data.access_token;
+
+    // delet transaction
+    const deleteTRansactionUrl = `${this.baseUrl}/trade-crypto/api/transactions/${id}`;
+    this.logger.log(`Deleting Transaction with id ${id}`);
+    const options = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    return await axios.delete(deleteTRansactionUrl, options);
+  }
+}
+
+export default CryptoClient;

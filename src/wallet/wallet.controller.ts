@@ -17,12 +17,13 @@ import { CreateWalletDto, UpdateWalletDto } from './dto';
 import { DataAccessGuard } from 'src/auth/guard';
 import { CustomRequest } from 'src/auth/interface/request.interface';
 import { CustomLogger } from 'src/myLogger';
-import { deleteTransaction, getUserWalletTransactions } from 'clients/crypto';
+import CryptoClient from 'clients/crypto';
 
 @Controller('api/wallets')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
   private readonly logger = new CustomLogger(WalletController.name);
+  private cryptoClient = new CryptoClient();
 
   @Get('')
   @UseGuards(DataAccessGuard)
@@ -106,13 +107,14 @@ export class WalletController {
       // remove wallet transaction from crypto/stock/forex
       const walletType = wallet.type;
       if (walletType === 'CRYPTO') {
-        const userWalletTransactionsResponse = await getUserWalletTransactions(
-          req.user.email,
-          wallet.name,
-        );
+        const userWalletTransactionsResponse =
+          await this.cryptoClient.getUserWalletTransactions(
+            req.user.email,
+            wallet.name,
+          );
         const userWalletTransactions = userWalletTransactionsResponse.data;
         for (let transaction of userWalletTransactions) {
-          deleteTransaction(transaction.id);
+          this.cryptoClient.deleteTransaction(transaction.id);
         }
       }
       // TODO
