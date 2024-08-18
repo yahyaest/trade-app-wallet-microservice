@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     ports:
       - 3000:3000
+    # entrypoint: /app/entrypoint.sh
+    command: sh -c "chmod 777 /app/entrypoint.sh && /app/entrypoint.sh"
     depends_on:
       - postgres
     volumes:
